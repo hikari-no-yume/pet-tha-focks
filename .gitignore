@@ -2,3 +2,4 @@
 *.hi
 *.jsmod
 *.o
+/out

@@ -24,7 +24,7 @@ step (State hp effect) = State hp' effect'
             Cry         -> hp * 0.5
             Love        -> hp * 0.995
             Asleep      -> hp * 0.995
-            otherwise   -> hp * 0.99
+            _           -> hp * 0.99
 
         effect' = case effect of
             None
@@ -63,7 +63,7 @@ click (State hp effect) = State hp' effect'
             Asleep      -> Alert 2
             Bored       -> Alert 2
             Dead        -> Dead
-            otherwise   -> effect
+            _           -> effect
 
 setIfDifferent :: Elem -> PropID -> String -> IO ()
 setIfDifferent elem prop value = do
@@ -130,6 +130,6 @@ main = do
     addChild img documentBody
     addChild hpLabel documentBody
 
-    img `onEvent` Click $ \_ -> processClick img hpBar stateRef
+    void $ img `onEvent` Click $ \_ -> processClick img hpBar stateRef
     void $ setTimer (Once 1000) (process img hpBar stateRef)
 
