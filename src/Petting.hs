@@ -8,6 +8,12 @@ void = (>>= (\_ -> return ()))
 
 type HP = Double
 
+-- Make sure HP doesn't go *too* far above the "maximum"
+-- It would cap at 1.0, but people liked being able to go over
+-- So we'll let them go over a bit, but not too far
+capHp :: Double -> Double
+capHp = min 1.5
+
 data Effect = None | Love | Asleep | Alert Int | Bored | Sad | Cry | Dead
 
 data State = State HP Effect
@@ -19,7 +25,7 @@ defaultState = State 0.75 Asleep
 step :: State -> State
 step (State hp effect) = State hp' effect'
     where
-        hp' = case effect of
+        hp' = capHp $ case effect of
             Sad         -> hp * 0.9
             Cry         -> hp * 0.5
             Love        -> hp * 0.995
@@ -57,7 +63,7 @@ step (State hp effect) = State hp' effect'
 click :: State -> State
 click (State hp effect) = State hp' effect'
     where
-        hp' = hp * 1.1 
+        hp' = capHp $ hp * 1.1
         effect' = case effect of
             None        -> Alert 2
             Asleep      -> Alert 2
