@@ -80,24 +80,28 @@ setIfDifferent elem prop value = do
 
 updateDOM :: Elem -> Elem -> State -> IO ()
 updateDOM img hpBar (State hp effect) = do
-    setIfDifferent img "src" (case effect of
-        None    -> "normal.gif"
-        Love    -> "love.gif"
-        Asleep  -> "sleep.gif"
-        Alert _ -> "owo.gif"
-        Bored   -> "bored.gif"
-        Sad     -> "sad.gif"
-        Cry     -> "cry.gif"
-        Dead    -> "dead.gif")
-    setIfDifferent img "alt" (case effect of
-        None    -> "focks happy ^w^"
-        Love    -> "focks super happy =w= <33"
-        Asleep  -> "focks sleep .zZ"
-        Alert _ -> "focks ears perk up owo"
-        Bored   -> "focks bored '-'"
-        Sad     -> "focks sad 'ʌ'"
-        Cry     -> "focks cry ;;ʌ;;"
-        Dead    -> "focks is dead, you monster, how could you")
+    let src = case effect of
+            None    -> "normal.gif"
+            Love    -> "love.gif"
+            Asleep  -> "sleep.gif"
+            Alert _ -> "owo.gif"
+            Bored   -> "bored.gif"
+            Sad     -> "sad.gif"
+            Cry     -> "cry.gif"
+            Dead    -> "dead.gif"
+    let alt = case effect of
+            None    -> "focks happy ^w^"
+            Love    -> "focks super happy =w= <33"
+            Asleep  -> "focks sleep .zZ"
+            Alert _ -> "focks ears perk up owo"
+            Bored   -> "focks bored '-'"
+            Sad     -> "focks sad 'ʌ'"
+            Cry     -> "focks cry ;;ʌ;;"
+            Dead    -> "focks is dead, you monster, how could you"
+
+    setIfDifferent img "src" src
+    setIfDifferent img "alt" alt
+    setIfDifferent img "title" alt
 
     setAttr hpBar "value" $ show hp
 
