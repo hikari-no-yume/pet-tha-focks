@@ -1,0 +1,32 @@
+body {
+    font-family: Comic Sans MS, sans-serif;
+}
+
+h1, #desc, footer, label {
+    text-align: center;
+}
+
+footer {
+    color: #ccc;
+    font-size: 75%;
+}
+footer a {
+    color: inherit;
+}
+
+#game, label {
+    display: block;
+    margin: 10px auto;
+}
+
+#game:hover {
+    cursor: pointer;
+}
+
+label {
+    width: 100px;
+}
+
+label > progress {
+    width: 100%;
+}
