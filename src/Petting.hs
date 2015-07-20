@@ -78,8 +78,8 @@ setIfDifferent elem prop value = do
         then return ()
         else setAttr elem prop value
 
-updateDOM :: Elem -> Elem -> State -> IO ()
-updateDOM img hpBar (State hp effect) = do
+updateDOM :: Elem -> Elem -> Elem -> State -> IO ()
+updateDOM img hpBar favicon (State hp effect) = do
     let src = case effect of
             None    -> "normal.gif"
             Love    -> "love.gif"
@@ -100,21 +100,22 @@ updateDOM img hpBar (State hp effect) = do
             Dead    -> "focks is dead, you monster, how could you"
 
     setIfDifferent img "src" src
+    setIfDifferent favicon "href" src
     setIfDifferent img "alt" alt
     setIfDifferent img "title" alt
 
     setAttr hpBar "value" $ show hp
 
-process :: Elem -> Elem -> IORef State -> IO ()
-process img hpBar stateRef = do
+process :: Elem -> Elem -> Elem -> IORef State -> IO ()
+process img hpBar favicon stateRef = do
     modifyIORef' stateRef step
-    updateDOM img hpBar =<< readIORef stateRef
-    void $ setTimer (Once 1000) (process img hpBar stateRef)
+    updateDOM img hpBar favicon =<< readIORef stateRef
+    void $ setTimer (Once 1000) (process img hpBar favicon stateRef)
 
-processClick :: Elem -> Elem -> IORef State -> IO ()
-processClick img hpBar stateRef = do
+processClick :: Elem -> Elem -> Elem -> IORef State -> IO ()
+processClick img hpBar favicon stateRef = do
     modifyIORef' stateRef click
-    updateDOM img hpBar =<< readIORef stateRef
+    updateDOM img hpBar favicon =<< readIORef stateRef
 
 main :: IO ()
 main = do
@@ -132,14 +133,19 @@ main = do
             attr "max" =: "1"
         ]
     (flip addChild) hpLabel hpBar
-   
+
+    favicon <- newElem "link" `with` [
+            attr "rel" =: "shortcut icon"
+        ]
+
     stateRef <- newIORef defaultState
 
-    updateDOM img hpBar =<< readIORef stateRef
+    updateDOM img hpBar favicon =<< readIORef stateRef
 
     addChild img documentBody
     addChild hpLabel documentBody
+    addChild favicon documentBody
 
-    void $ img `onEvent` Click $ \_ -> processClick img hpBar stateRef
-    void $ setTimer (Once 1000) (process img hpBar stateRef)
+    void $ img `onEvent` Click $ \_ -> processClick img hpBar favicon stateRef
+    void $ setTimer (Once 1000) (process img hpBar favicon stateRef)
 
