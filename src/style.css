@@ -14,7 +14,7 @@ footer a {
     color: inherit;
 }
 
-#game, label {
+#game, label, button {
     display: block;
     margin: 10px auto;
 }
@@ -29,4 +29,9 @@ label {
 
 label > progress {
     width: 100%;
+}
+
+button > img {
+    height: 16px;
+    vertical-align: bottom;
 }

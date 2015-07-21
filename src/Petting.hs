@@ -14,7 +14,7 @@ type HP = Double
 capHp :: Double -> Double
 capHp = min 1.5
 
-data Effect = None | Love | Asleep | Alert Int | Bored | Sad | Cry | Dead
+data Effect = None | Love | Asleep | Alert Int | Eating Int | Bored | Sad | Cry | Dead
 
 data State = State HP Effect
 
@@ -29,6 +29,8 @@ step (State hp effect) = State hp' effect'
             Sad         -> hp * 0.9
             Cry         -> hp * 0.5
             Love        -> hp * 0.995
+            -- Note that eating, unlike all other effects, *increases* HP
+            Eating _    -> hp * 1.05
             Asleep      -> hp * 0.995
             _           -> hp * 0.99
 
@@ -45,6 +47,8 @@ step (State hp effect) = State hp' effect'
                 | otherwise -> Asleep
             Alert 0 -> None
             Alert n -> Alert (n - 1)
+            Eating 0 -> None
+            Eating n -> Eating (n - 1)
             Bored
                 | hp < 0.25 -> Sad
                 | hp > 0.6  -> None
@@ -71,6 +75,11 @@ click (State hp effect) = State hp' effect'
             Dead        -> Dead
             _           -> effect
 
+-- Updates state when "feed" clicked
+feed :: State -> State
+feed s@(State _ Dead) = s
+feed (State hp _) = State hp (Eating 3)
+
 -- Just a container with our DOM elements, so we don't have to pass three args
 data Elems = Elems Elem Elem Elem
 
@@ -84,23 +93,25 @@ setIfDifferent elem prop value = do
 updateDOM :: Elems -> State -> IO ()
 updateDOM (Elems img hpBar favicon) (State hp effect) = do
     let src = case effect of
-            None    -> "normal.gif"
-            Love    -> "love.gif"
-            Asleep  -> "sleep.gif"
-            Alert _ -> "owo.gif"
-            Bored   -> "bored.gif"
-            Sad     -> "sad.gif"
-            Cry     -> "cry.gif"
-            Dead    -> "dead.gif"
+            None        -> "normal.gif"
+            Love        -> "love.gif"
+            Asleep      -> "sleep.gif"
+            Alert _     -> "owo.gif"
+            Eating _    -> "eat.gif"
+            Bored       -> "bored.gif"
+            Sad         -> "sad.gif"
+            Cry         -> "cry.gif"
+            Dead        -> "dead.gif"
     let alt = case effect of
-            None    -> "focks happy ^w^"
-            Love    -> "focks super happy =w= <33"
-            Asleep  -> "focks sleep .zZ"
-            Alert _ -> "focks ears perk up owo"
-            Bored   -> "focks bored '-'"
-            Sad     -> "focks sad 'ʌ'"
-            Cry     -> "focks cry ;;ʌ;;"
-            Dead    -> "focks is dead, you monster, how could you"
+            None        -> "focks happy ^w^"
+            Love        -> "focks super happy =w= <33"
+            Asleep      -> "focks sleep .zZ"
+            Alert _     -> "focks ears perk up owo"
+            Eating _    -> "focks eat *nom*"
+            Bored       -> "focks bored '-'"
+            Sad         -> "focks sad 'ʌ'"
+            Cry         -> "focks cry ;;ʌ;;"
+            Dead        -> "focks is dead, you monster, how could you"
 
     setIfDifferent img "src" src
     setIfDifferent favicon "href" src
@@ -115,9 +126,9 @@ process elems stateRef = do
     updateDOM elems =<< readIORef stateRef
     void $ setTimer (Once 1000) (process elems stateRef)
 
-processClick :: Elems -> IORef State -> IO ()
-processClick elems stateRef = do
-    modifyIORef' stateRef click
+processClick :: Elems -> IORef State -> (State -> State) -> IO ()
+processClick elems stateRef modifier = do
+    modifyIORef' stateRef modifier
     updateDOM elems =<< readIORef stateRef
 
 main :: IO ()
@@ -141,6 +152,15 @@ main = do
             attr "rel" =: "shortcut icon"
         ]
 
+    feedBtn <- newElem "button" `with` [
+            attr "title" =: "feed focks a chicken nugget"
+        ]
+    (flip addChild) feedBtn =<< newElem "img" `with` [
+            attr "src" =: "nugget.gif",
+            attr "alt" =: ""
+        ]
+    (flip addChild) feedBtn =<< newTextElem " feed"
+
     stateRef <- newIORef defaultState
 
     let elems = Elems img hpBar favicon
@@ -150,7 +170,9 @@ main = do
     addChild img documentBody
     addChild hpLabel documentBody
     addChild favicon documentBody
+    addChild feedBtn documentBody
 
-    void $ img `onEvent` Click $ \_ -> processClick elems stateRef
+    void $ img `onEvent` Click $ \_ -> processClick elems stateRef click
+    void $ feedBtn `onEvent` Click $ \_ -> processClick elems stateRef feed
     void $ setTimer (Once 1000) (process elems stateRef)
 
